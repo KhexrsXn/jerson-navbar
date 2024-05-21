@@ -1,3 +1,4 @@
+'use client'
 import { useState, useRef, useEffect } from 'react';
 import { FaApple } from 'react-icons/fa';
 import { IoSearch, IoBag } from "react-icons/io5";
