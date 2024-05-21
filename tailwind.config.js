@@ -9,7 +9,7 @@ module.exports = {
     extend: {
       colors: {
         customGray: '#444445',
-        navColor: 'rgba(22, 22, 23, .8)',
+        navColor: '#000000',
       }
     },
   },

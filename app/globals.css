@@ -4,17 +4,17 @@
 
 * {
   padding: 0;
-  box-sizing: border-box;
   margin: 0;
-  
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: #161617;
 }
 
-@media screen and (max-width: 768px) {
-  .tablet-visible {
-    display: flex;
-  }
-}
+
+

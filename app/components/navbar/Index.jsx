@@ -1,189 +1,270 @@
-'use client'
-import { useState, useRef,  } from "react";
-import { FaApple } from "react-icons/fa";
-// import Image from 'next/image';
-// import iphoneBckgrnd from '../../../public/assets/iphoneBckgrnd.png';
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import { FaApple } from 'react-icons/fa';
 import { IoSearch, IoBag } from "react-icons/io5";
 import { FaArrowRightLong } from "react-icons/fa6";
+import { FaBars, FaTimes } from 'react-icons/fa';
+import { IoIosArrowBack } from "react-icons/io";
 import { BsBoxFill } from "react-icons/bs";
 import { CgPentagonUp } from "react-icons/cg";
 import { MdOutlineFlagCircle, MdAccountCircle } from "react-icons/md";
-import { HiOutlineMenuAlt4 } from "react-icons/hi";
 
-function Item({ name, children, onMouseEnter, onMouseLeave, onClick }) {
-    return (
-      <div
-        className="w-full h-full container mx-3"
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onClick={onClick}>
-        <div className="flex items-center font-sans text-xs whitespace-nowrap cursor-pointer px-2 h-full">{name}</div>
-        {children}
+function Item({ name, onMouseEnter, onMouseLeave, onClick }) {
+  const [isTabletOrMobile, setIsTabletOrMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsTabletOrMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`px-1 text-white`}
+      onMouseEnter={!isTabletOrMobile ? onMouseEnter : undefined}
+      onMouseLeave={!isTabletOrMobile ? onMouseLeave : undefined}
+      onClick={isTabletOrMobile ? onClick : undefined}
+    >
+      <div className={`flex items-center font-sans whitespace-nowrap cursor-pointer px-2 h-full ${isTabletOrMobile ? 'text-2xl' : 'text-xs'}`}>
+        {name}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
 export const Navbar = () => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState(null); 
+  const [hoveredItem, setHoveredItem] = useState(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const hoverTimeout = useRef(null);
   const firstInputRef = useRef();
 
   const handleItemHover = (itemName) => {
-    setHoveredItem(itemName); 
-    setShowDropdown(itemName!== null);
+    setHoveredItem(itemName);
+    setIsHovering(true);
+    clearTimeout(hoverTimeout.current);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeout.current = setTimeout(() => {
+      setIsHovering(false);
+    }, 300); 
   };
 
   const handleCart = (itemName) => {
-    if (hoveredItem === itemName && showDropdown){
-      setShowDropdown(false);
-      setHoveredItem(null);
+    if (hoveredItem === itemName && isHovering) {
+      hoverTimeout.current = setTimeout(() => {
+        setIsHovering(false);
+      }, 300); 
     } else {
-      setShowDropdown(true);
       setHoveredItem(itemName);
+      setIsHovering(true);
+      clearTimeout(hoverTimeout.current);
     }
   };
 
+  useEffect(() => {
+    if (firstInputRef.current) {
+      firstInputRef.current.focus();
+    }
+  }, [isHovering]);
 
   return (
-    <main>
-      <nav
-        className={`w-full h-11 text-white
-        ${showDropdown === true ? 'backdrop-blur-sm bg-black/30' : undefined}
-        `}
-        style={{backgroundColor: '#111112'}}
-      >
-        <ul className=" h-full flex justify-center container mx-auto items-center " onMouseDown={() => setShowDropdown(true)}>
-          <li className="h-full"> {/*This is for Apple Logo*/} 
-            <Item
-              name={<FaApple onClick={() => window.location.reload()} className={`text-xl`} />}
-            />
-          </li>
-          <li className="h-full"> {/*This is for Store menu*/} 
-            <Item
+    <>
+      <nav className="bg-navColor h-11 w-full flex items-center justify-center relative opacity-100">
+        <div
+          className={`backdrop-blur-sm bg-black/30 h-full w-full absolute top-11 z-0`}
+          style={{ height: isHovering || menuOpen === true ? "calc(100vh - 44px)" : '0' }}>
+        </div>
+        <div className="h-full flex items-center container px-3 mx-auto z-10 justify-between opacity-100 bg-navColor">
+          <div className="h-full flex items-center">
+            <button onClick={()=> window.location.reload()}><FaApple className="text-white text-2xl" /></button>
+          </div>
+          <div className={`tablet-size absolute pl-5 pt-96 pb-5 transition-transform ease-out duration-300 left-0 w-full bg-navColor opacity-100 overflow-hidden ${menuOpen ? '-translate-y-0' : '-translate-y-full'} md:relative  md:pl-0 md:pt-0 md:pb-0 md:translate-y-0 md:flex md:h-full`}>
+           <Item
+              onMouseEnter={() => handleItemHover('Store')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Store')}
               name="Store"
-              onMouseEnter={() => handleItemHover("Store")}
-              onMouseLeave={() => handleItemHover(null)}
-            >
-              <div
-                className="absolute w-screen top-11 h-full left-0 z-50"
-                style={{
-                  height: showDropdown && hoveredItem === "Store" ? '360px' : '0',
-                  overflow: 'hidden',
-                  transition: ' 0.3s ease-in-out',
-                  backgroundColor: '#111112'
-                }}>
-                  <div className="flex p-11 gap-10">
-                    <div>
-                      <h6 className="text-sm font-sans text-slate-400">Store</h6>
-                      <ul className="text-xl font-bold mt-2 flex flex-col gap-2">
-                        <li>Shop the latest</li>
-                        <li>Mac</li>
-                        <li>iPad</li>
-                        <li>iPhone</li>
-                        <li>Apple Watch</li>
-                        <li>Apple Version</li>
-                        <li>Accessories</li>
-                      </ul>
-                    </div>
-                    <div className="ml-5">
-                      <h6 className="text-sm font-sans text-slate-400">Quick Links</h6>
-                      <ul className="text-xs font-bold mt-3 flex flex-col gap-2">
-                        <li>Find a Store</li>
-                        <li>Order Status</li>
-                        <li>Apple Trade In</li>
-                        <li>Financing</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h6 className="text-sm font-sans text-slate-400">Shop Special Stores</h6>
-                      <ul className="text-sm font-bold mt-3 flex flex-col gap-2">
-                        <li className="text-xs">Certified Refurshed</li>
-                        <li className="text-xs">Education</li>
-                        <li className="text-xs">Business</li>
-                        <li className="text-xs">Veterance and Military</li>
-                        <li className="text-xs">Government</li>
-                      </ul>
-                    </div>
-                  </div>
-              </div>
-            </Item>
-          </li>
-          <li className="h-full"> {/*This is for Mac menu*/} 
-            <Item 
-              name='Mac'
+            />
+            <Item
               onMouseEnter={() => handleItemHover('Mac')}
-              onMouseLeave={() => handleItemHover(null)}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Mac')}
+              name="Mac"
             />
-            <div
-                className="absolute top-11 w-screen h-full left-0 z-50"
-                style={{
-                height: showDropdown && hoveredItem === 'Mac' ? '450px' : '0',
-                overflow: 'hidden',
-                transition: '0.3s ease-in-out',
-                backgroundColor: '#111112'
-              }}
-            >
-            <div className="flex gap-10 p-11 ">
-              <div>
-                <h6 className="text-sm font-sans text-slate-400">Explore Mac</h6>
-                <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
-                  <li>Explor All Mac</li>
-                  <li>MacBook Air</li>
-                  <li>MacBook Pro</li>
-                  <li>iMac</li>
-                  <li>Mac Mini</li>
-                  <li>Mac Studio</li>
-                  <li>Mac Pro</li>
-                  <li>Displays</li>
-                  <li>
-                    <div className="fkex flex-row mt-5">
-                      <p className="text-xs">Compare Mac</p>
-                      <p className="text-xs">Mac Does That</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h6 className="text-sm font-sans text-slate-400">Shop Mac</h6>
-                <ul className="text-sm font-bold mt-3 flex flex-col gap-2">
-                  <li className="text-xs">Shop Mac</li>
-                  <li className="text-xs">Mac Accessories</li>
-                  <li className="text-xs">Apple Trade In</li>
-                  <li className="text-xs">Financing</li>
-                </ul>
-              </div>
-              <div>
-                <h6 className="text-sm font-sans text-slate-400">More from Mac</h6>
-                <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
-                  <li className="text-xs">Mac Support</li>
-                  <li className="text-xs">AppleCare+ for Mac</li>
-                  <li className="text-xs">macOS Sonnoma</li>
-                  <li className="text-xs">Apps by Apple</li>
-                  <li className="text-xs">iCloud+</li>
-                  <li className="text-xs">Mac for Business</li>
-                  <li className="text-xs">Education</li>
-                </ul>
-              </div>
-            </div>
-            </div>
-          </li>
-          <li className="h-full"> {/*This is for iPad menu*/} 
-            <Item 
-              name='iPad'
+            <Item
               onMouseEnter={() => handleItemHover('iPad')}
-              onMouseLeave={() => handleItemHover(null)}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('iPad')}
+              name="iPad"
             />
-            <div
-              className="absolute top-11 w-screen left-0 z-50"
-              style={{
-                height: showDropdown && hoveredItem === 'iPad' ? '425px' : '0',
-                overflow: 'hidden',
-                transition: '0.3s ease-in-out',
-                backgroundColor: '#111112'
-              }}
-            >
-            <div className="flex gap-10 p-11 m-auto">
-              <div>
+            <Item
+              onMouseEnter={() => handleItemHover('iPhone')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('iPhone')}
+              name="iPhone"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('Watch')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Watch')}
+              name="Watch"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('Vision')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Vision')}
+              name="Vision"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('AirPods')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('AirPods')}
+              name="AirPods"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('TV & Home')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('TV & Home')}
+              name="TV & Home"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('Entertainment')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Entertainment')}
+              name="Entertainment"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('Accessories')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Accessories')}
+              name="Accessories"
+            />
+            <Item
+              onMouseEnter={() => handleItemHover('Support')}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleItemHover('Support')}
+              name="Support"/>
+          </div>
+          <div>
+           <div className='flex items-center'>
+            <button className="flex h-full items-center px-2 text-base text-white" onClick={() => handleCart('Search')} onMouseLeave={handleMouseLeave}><IoSearch /></button>
+            <button className="flex h-full items-center px-2 text-base text-white" onClick={() => handleCart('Cart')} onMouseLeave={handleMouseLeave}><IoBag /></button>
+            <div className="md:hidden flex justify-between  items-center z-50">
+              <button className="text-white text-xl" onClick={() => setMenuOpen(!menuOpen)}>
+                {menuOpen ? <FaTimes /> : <FaBars />}
+              </button>
+            </div>
+           </div>
+          </div>
+        </div>
+        <div
+          className={`absolute transition-transform ease-out duration-300 bg-navColor opacity-100 ${
+            isHovering ? '-translate-y-0 z-10' : '-translate-y-full'
+          } w-screen top-0 pt-10 md:pt-0 md:top-11 md:z-0 text-white`}
+          onMouseEnter={() => clearTimeout(hoverTimeout.current)}
+          onMouseLeave={handleMouseLeave}>
+          <div className={` container mx-auto transition duration-700 ease-in-out pt-16 relative opacity-100 md:pt-0 h-screen md:h-full`}>
+          <div className={`flex justify-between items-center absolute z-50 top-0 w-full`}>
+            <button className={`md:hidden  ${isHovering ? 'block' : 'hidden'} ${hoveredItem === 'Cart' || hoveredItem === 'Search' ? 'hidden' : 'block'}`} onClick={() => setIsHovering(false)}><IoIosArrowBack className=' z-20 text-white text-xl' /></button>
+            <button className={`text-white text-xl md:hidden ${hoveredItem === 'Cart' || hoveredItem === 'Search' ? 'hidden' : 'block'}`} onClick={() => {setMenuOpen(!menuOpen),setIsHovering(false) }}>
+                  {menuOpen ? <FaTimes /> : <FaBars />}
+            </button>
+            <button className={`md:hidden z-50 flex justify-end items-end w-full mr-10 ${hoveredItem === 'Cart' || hoveredItem === 'Search' ? 'block' : 'hidden'}`} onClick={() => setIsHovering(false)}><FaTimes className='text-2xl text-white' /></button>
+          </div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Store' ? 'opacity-100' : 'opacity-0'} `}>
+              {hoveredItem === 'Store' && (
+                <div className={`flex p-4 gap-10 transition flex-wrap ease-in-out ${hoveredItem === 'Store' ? 'opacity-100' : 'opacity-0'}`}>
+                  <div>
+                    <h6 className="text-sm font-sans text-slate-400">Store</h6>
+                    <ul className="text-xl font-bold mt-2 flex flex-col gap-2">
+                      <li>Shop the latest</li>
+                      <li>Mac</li>
+                      <li>iPad</li>
+                      <li>iPhone</li>
+                      <li>Apple Watch</li>
+                      <li>Apple Version</li>
+                      <li>Accessories</li>
+                    </ul>
+                  </div>
+                  <div className="ml-5">
+                    <h6 className="text-sm font-sans text-slate-400">Quick Links</h6>
+                    <ul className="text-xs font-bold mt-3 flex flex-col gap-2">
+                      <li>Find a Store</li>
+                      <li>Order Status</li>
+                      <li>Apple Trade In</li>
+                      <li>Financing</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h6 className="text-sm font-sans text-slate-400">Shop Special Stores</h6>
+                    <ul className="text-sm font-bold mt-3 flex flex-col gap-2">
+                      <li className="text-xs">Certified Refurbished</li>
+                      <li className="text-xs">Education</li>
+                      <li className="text-xs">Business</li>
+                      <li className="text-xs">Veterans and Military</li>
+                      <li className="text-xs">Government</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Mac' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Mac' && (
+                <div className={`flex gap-10 p-4  flex-wrap transition ease-in-out`}>
+                  <div>
+                    <h6 className="text-sm font-sans text-slate-400">Explore Mac</h6>
+                    <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                      <li>Explore All Mac</li>
+                      <li>MacBook Air</li>
+                      <li>MacBook Pro</li>
+                      <li>iMac</li>
+                      <li>Mac Mini</li>
+                      <li>Mac Studio</li>
+                      <li>Mac Pro</li>
+                      <li>Displays</li>
+                      <li>
+                        <div className="flex flex-row mt-5">
+                          <p className="text-xs">Compare Mac</p>
+                          <p className="text-xs">Mac Does That</p>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h6 className="text-sm font-sans text-slate-400">Shop Mac</h6>
+                    <ul className="text-sm font-bold mt-3 flex flex-col gap-2">
+                      <li className="text-xs">Shop Mac</li>
+                      <li className="text-xs">Mac Accessories</li>
+                      <li className="text-xs">Apple Trade In</li>
+                      <li className="text-xs">Financing</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h6 className="text-sm font-sans text-slate-400">More from Mac</h6>
+                    <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                      <li className="text-xs">Mac Support</li>
+                      <li className="text-xs">AppleCare+ for Mac</li>
+                      <li className="text-xs">macOS Sonoma</li>
+                      <li className="text-xs">Apps by Apple</li>
+                      <li className="text-xs">iCloud+</li>
+                      <li className="text-xs">Mac for Business</li>
+                      <li className="text-xs">Education</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'iPad' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'iPad' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
+                <div>
                 <h6 className="text-sm font-sans text-slate-400">Explor iPad</h6>
                 <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
                   <li>Explor All iPad</li>
@@ -200,7 +281,7 @@ export const Navbar = () => {
                     </div>
                   </li>
                 </ul>
-              </div>
+                </div>
               <div>
                 <h6 className="text-sm font-sans text-slate-400">Shop iPad</h6>
                 <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
@@ -222,24 +303,12 @@ export const Navbar = () => {
                 </ul>
               </div>
             </div>
+              )}
             </div>
-          </li>
-          <li className="h-full"> {/*This is for iPhone menu*/}
-              <Item 
-               name='iPhone'
-               onMouseEnter={() => handleItemHover('iPhone')}
-               onMouseLeave={() => handleItemHover(null)}/>
-                <div
-              className="absolute top-11 w-screen left-0 z-50"
-              style={{
-                height: showDropdown && hoveredItem === 'iPhone' ? '400px' : '0',
-                overflow: 'hidden',
-                transition: '0.3s ease-in-out',
-                backgroundColor: '#111112'
-              }}
-            >
-              <div className="flex p-11 gap-10">
-                <div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'iPhone' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'iPhone' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
+                  <div>
                   <h6 className="text-sm font-sans text-slate-400">Explor iPhone</h6>
                   <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
                     <li>Explor All iPhone</li>
@@ -279,25 +348,12 @@ export const Navbar = () => {
                     <li className="text-xs">Siri</li>
                   </ul>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
-          </li>
-          <li className="h-full"> {/*This is for Watch menu*/}
-            <Item
-              name='Watch'
-              onMouseEnter={() => handleItemHover('Watch')}
-              onMouseLeave={() => handleItemHover(null)}
-            />
-            <div
-              className="absolute top-11 w-screen left-0 z-50"
-              style={{
-                height: showDropdown && hoveredItem === 'Watch' ? '390px' : '0',
-                overflow: 'hidden',
-                transition: '0.3s ease-in-out',
-                backgroundColor: '#111112'
-              }}
-            >
-              <div className="flex gap-10 p-11">
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Watch' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Watch' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
                 <div>
                   <h6 className="text-sm font-sans text-slate-400">Explore Watch</h6>
                   <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
@@ -336,26 +392,47 @@ export const Navbar = () => {
                   <li className="text-xs">Apple Fitness+</li>
                 </ul>
               </div>
-              </div>
+                </div>
+              )}
             </div>
-          </li>
-          <li className="h-full"> {/*This is for AirPods menu*/}
-            <Item 
-              name='AirPods'
-              onMouseEnter={() => handleItemHover('AirPods')}
-              onMouseLeave={() => handleItemHover(null)}
-            />
-            <div
-            className="absolute top-11 w-screen left-0 z-50"
-            style={{
-              height: showDropdown && hoveredItem === 'AirPods' ? '300px' : '0',
-              overflow: 'hidden',
-              transition: '0.3s ease-in-out',
-              backgroundColor: '#111112'
-            }}
-            >
-              <div className="flex gap-10 p-11">
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Vision' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Vision' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
+                  <div>
+                  <h6 className="text-sm font-sans text-slate-400">Explore Vision</h6>
+                  <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                    <li>Explore Apple Vision Pro</li>
+                    <li>
+                      <div className="flex flex-col mt-3">
+                        <span className="text-sm">Guided Tour</span>
+                        <span className="text-sm">Tech Specs</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
                 <div>
+                  <h6 className="text-sm font-sans text-slate-400">Shop Vision</h6>
+                  <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                    <li className="text-xs">Shop Apple Vision Pro</li>
+                    <li className="text-xs">Apple Vision Pro Accessories</li>
+                    <li className="text-xs">Book a Demo</li>
+                    <li className="text-xs">Financing</li>
+                  </ul>
+                </div>
+              <div>
+                <h6 className="text-sm font-sans text-slate-400">More from Vision</h6>
+                <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                  <li className="text-xs">Apple Vision Pro Support</li>
+                  <li className="text-xs">AppleCare+</li>
+                </ul>
+              </div>
+                </div>
+              )}
+            </div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'AirPods' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'AirPods' && (
+                <div className='flex flex-wrap gap-10 p-4  transition ease-in-out'>
+                  <div>
                   <h6 className="text-sm font-sans text-slate-400">Explor AirPods</h6>
                   <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
                     <li>Explore All AirPods</li>
@@ -385,25 +462,12 @@ export const Navbar = () => {
                     <li className="text-xs">Apps Music</li>
                   </ul>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
-          </li>
-          <li className="h-full"> {/*This is for TV & Home menu*/}
-            <Item
-              name='TV & Home'
-              onMouseEnter={() => handleItemHover('TV & Home')}
-              onMouseLeave={() => handleItemHover(null)}
-            />
-            <div 
-              className="absolute top-11 w-screen left-0 z-50"
-              style={{
-                height: showDropdown && hoveredItem === 'TV & Home' ? '330px' : '0',
-                overflow: 'hidden',
-                transition: '0.3s ease-in-out',
-                backgroundColor: '#111112'
-              }}
-            >
-              <div className="flex gap-10 p-11">
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'TV & Home' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'TV & Home' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
                 <div>
                   <h6 className="text-sm font-sans text-slate-400">Explore TV & Home</h6>
                   <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
@@ -437,25 +501,14 @@ export const Navbar = () => {
                     <li className="text-xs">AirPlay</li>
                   </ul>
                 </div>
-              </div>
+
+                </div>
+              )}.
             </div>
-          </li>
-          <li className="h-full"> {/*This is for Entertainment menu*/}
-            <Item
-              name='Entertainment'
-              onMouseEnter={() => handleItemHover('Entertainment')}
-              onMouseLeave={() => handleItemHover(null)}
-            />
-            <div
-            className="absolute top-11 w-screen left-0 z-50"
-            style={{
-              height: showDropdown && hoveredItem === 'Entertainment' ? '470px' : '0',
-              overflow: 'hidden',
-              transition: '0.3s ease-in-out',
-              backgroundColor: '#111112'
-            }}>
-              <div className="flex gap-10 p-11">
-                <div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Entertainment' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Entertainment' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
+                  <div>
                   <h6 className="text-sm font-sans text-slate-400">Explore Entertainment</h6>
                   <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
                     <li>Explore Entertainment</li>
@@ -477,67 +530,41 @@ export const Navbar = () => {
                     <li className="text-xs">Apple Music Support</li>
                   </ul>
                 </div>
-              </div>
 
-            </div>
-          </li>
-          <li className="h-full"> {/*This is for Accesories menu*/}
-            <Item 
-              name='Accessories'
-              onMouseEnter={() => handleItemHover('Accessories')}
-              onMouseLeave={() => handleItemHover(null)}
-            />
-            <div
-            className="absolute top-11 w-screen left-0 z-50"
-            style={{
-              height: showDropdown && hoveredItem === 'Accessories' ? '380px' : '0',
-              overflow: 'hidden',
-              transition: '0.3s ease-in-out',
-              backgroundColor: '#111112'
-            }}>
-              <div className="flex p-11 gap-20">
-                <div>
-                <h6 className="text-sm text-slate-400">Shop Accessories</h6>
-                <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
-                  <li>Shop All Accessories</li>
-                  <li>Mac</li>
-                  <li>iPad</li>
-                  <li>iPhone</li>
-                  <li>Apple Watch</li>
-                  <li>Apple Vesion Pro</li>
-                  <li>AirPods</li>
-                  <li>TV & Home</li>
-                </ul>
                 </div>
-              <div>
-                <h6 className="text-sm text-slate-400">Explore Accessories</h6>
-                <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
-                  <li className="text-sm">Made by Apple</li>
-                  <li className="text-xs">Beats by Dr.Dre</li>
-                  <li className="text-xs">AirTag</li>
-                </ul>
-              </div>
-              </div>
+              )}
             </div>
-
-          </li>
-          <li className="h-full"> {/*This is for Support menu*/}    
-            <Item 
-              name='Support'
-              onMouseEnter={() => handleItemHover('Support')}
-              onMouseLeave={() => handleItemHover(null)}
-            />
-            <div
-            className="absolute top-11 w-screen left-0 z-50"
-            style={{
-              height: showDropdown && hoveredItem === 'Support' ? '425px' : '0',
-              overflow: 'hidden',
-              transition: '0.3s ease-in-out',
-              backgroundColor: '#111112'
-            }}
-            >
-              <div className="flex gap-10 p-11">
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Accessories' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Accessories' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
+                  <div>
+                  <h6 className="text-sm text-slate-400">Shop Accessories</h6>
+                  <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                    <li>Shop All Accessories</li>
+                    <li>Mac</li>
+                    <li>iPad</li>
+                    <li>iPhone</li>
+                    <li>Apple Watch</li>
+                    <li>Apple Vesion Pro</li>
+                    <li>AirPods</li>
+                    <li>TV & Home</li>
+                  </ul>
+                  </div>
                 <div>
+                  <h6 className="text-sm text-slate-400">Explore Accessories</h6>
+                  <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
+                    <li className="text-sm">Made by Apple</li>
+                    <li className="text-xs">Beats by Dr.Dre</li>
+                    <li className="text-xs">AirTag</li>
+                  </ul>
+                </div>
+                  </div>
+              )}
+            </div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Support' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Support' && (
+                <div className='flex flex-wrap gap-10 p-4 transition ease-in-out'>
+                   <div>
                   <h6 className="text-sm font-sans text-slate-400">Explore Support</h6>
                   <ul className="text-xl font-bold mt-3 flex flex-col gap-2">
                     <li>iPhone</li>
@@ -574,88 +601,62 @@ export const Navbar = () => {
                     <li className="text-xs">Accessibility</li>
                   </ul>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
-          </li>
-          <li className="h-full"> {/*This is for Search menu*/}
-            <button className="flex h-full items-center px-2 text-xl" onClick={() => {handleCart('Search'), firstInputRef.current.focus()}}><IoSearch /></button>
-            <div
-            className="absolute top-10 w-screen left-0 z-50"
-            style={{
-              height: showDropdown && hoveredItem === 'Search' ? '425px' : '0',
-              overflow: 'hidden',
-              transition: '0.3s ease-in-out',
-              backgroundColor: '#111112'
-            }}
-            onMouseLeave={() => handleItemHover(null)}
-            >
-              <div className="flex flex-col gap-10 p-11">
-                <div className="w-full">
-                  <div className="flex items-center bg-navColor p-2 rounded-md">
-                    <h6 className="text-2xl font-sans "><IoSearch /></h6>
-                    <input 
-                        className="w-full p-2 bg-navColor outline-none" 
-                        type="text" 
-                        placeholder="Search apple.com" 
-                        ref={firstInputRef}/>
+            <div className={`transition duration-700 flex-wrap ease-in-out ${hoveredItem === 'Search' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Search' && (
+                <div className={`flex flex-col gap-10 p-4 transition ease-in-out`}>
+                  <div className="w-full">
+                    <div className="flex items-center bg-navColor p-2 rounded-md">
+                      <h6 className="text-2xl font-sans"><IoSearch /></h6>
+                      <input
+                        className="w-full p-2 bg-navColor outline-none"
+                        type="text"
+                        placeholder="Search apple.com"
+                        ref={firstInputRef}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <h6 className="text-sm font-sans text-slate-400">Quick Links</h6>
+                    <ul className="text-sm mt-3 flex flex-col">
+                      <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor"><FaArrowRightLong />Find a Store</li>
+                      <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor"><FaArrowRightLong />Apple Vision Pro</li>
+                      <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor"><FaArrowRightLong />AirPods</li>
+                      <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor"><FaArrowRightLong />AirTag</li>
+                      <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor"><FaArrowRightLong />Apple Trade In</li>
+                    </ul>
                   </div>
                 </div>
-                <div>
-                  <h6 className="text-sm font-sans text-slate-400">Quick Links</h6>
-                  <ul className="text-sm mt-3 flex flex-col">
-                    <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <FaArrowRightLong />Find a Store</li>
-                    <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <FaArrowRightLong />Apple Vision Pro</li>
-                    <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <FaArrowRightLong />AirPods</li>
-                    <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <FaArrowRightLong />AirTag</li>
-                    <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <FaArrowRightLong />Apple Trade In</li>
-                  </ul>
+              )}
+            </div>
+            <div className={`transition duration-700 ease-in-out ${hoveredItem === 'Cart' ? 'opacity-100' : 'opacity-0'}`}>
+              {hoveredItem === 'Cart' && (
+                <div className={`flex flex-col gap-10 p-4 transition ease-in-out`}>
+            <div>
+                <h6 className="text-2xl font-bold text-white">Your Bag is Empty.</h6>
+            </div>
+            <div className="text-sm flex gap-1">
+              <h6 className="text-blue-600 underline">Sign in</h6>
+              <h6 className="font-bold text-gray-400">to see if you have any saved items</h6>
+            </div>
+            <div>
+              <h6 className="text-sm font-sans text-gray-400">My Profile</h6>
+              <ul className="text-sm mt-3 flex flex-col">
+                <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <BsBoxFill />Order</li>
+                <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 pr-2 py-1 hover:text-white hover:bg-navColor "> <CgPentagonUp className="text-2xl"/>Your Saves</li>
+                <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <MdOutlineFlagCircle />Account</li>
+                <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <MdAccountCircle />Sign in</li>
+              </ul>
+            </div>
+
                 </div>
-              </div>
+              )}
             </div>
-          </li>
-          <li className="h-full"> {/*This is for Cart menu*/}
-            <button className="flex h-full items-center px-3 text-xl" onClick={() => handleCart('Cart')}><IoBag /></button>
-            <div
-            className="absolute top-10 w-screen left-0 z-50"
-            style={{
-              height: showDropdown && hoveredItem === 'Cart' ? '425px' : '0',
-              overflow: 'hidden',
-              transition: '0.3s ease-in-out',
-              backgroundColor: '#111112'
-            }}
-            onMouseLeave={() => handleItemHover(null)}
-            >
-              <div className="flex flex-col p-11 gap-5">
-              <div>
-                  <h6 className="text-2xl font-bold text-white">Your Bag is Empty.</h6>
-              </div>
-              <div className="text-sm flex gap-1">
-                <h6 className="text-blue-600 underline">Sign in</h6>
-                <h6 className="font-bold text-gray-400">to see if you have any saved items</h6>
-              </div>
-              <div>
-                <h6 className="text-sm font-sans text-gray-400">My Profile</h6>
-                <ul className="text-sm mt-3 flex flex-col">
-                  <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <BsBoxFill />Order</li>
-                  <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 pr-2 py-1 hover:text-white hover:bg-navColor "> <CgPentagonUp className="text-2xl"/>Your Saves</li>
-                  <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <MdOutlineFlagCircle />Account</li>
-                  <li className="flex items-center whitespace-nowrap gap-5 text-gray-400 px-2 py-1 hover:text-white hover:bg-navColor "> <MdAccountCircle />Sign in</li>
-                </ul>
-              </div>
-              </div>
-            </div>
-          </li>
-          <li className="h-full items-center px-2 hidden tablet-visible ">
-            <button><HiOutlineMenuAlt4 /></button>
-          </li>
-        </ul>
-        {/* Show blur background filter when any dropdown is shown or active */}
-        <div
-          className={`backdrop-blur-sm bg-black/30 h-screen w-screen absolute top-11 z-0`}
-          style={{ height: showDropdown === true ? "calc(100vh - 44px)" : '0'}}
-          >
+          </div>
         </div>
       </nav>
-    </main>
+    </>
   );
-}
+};
