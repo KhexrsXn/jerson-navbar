@@ -1,4 +1,3 @@
-'use client';
 import { useState, useRef, useEffect } from 'react';
 import { FaApple } from 'react-icons/fa';
 import { IoSearch, IoBag } from "react-icons/io5";
@@ -10,17 +9,19 @@ import { CgPentagonUp } from "react-icons/cg";
 import { MdOutlineFlagCircle, MdAccountCircle } from "react-icons/md";
 
 function Item({ name, onMouseEnter, onMouseLeave, onClick }) {
-  const [isTabletOrMobile, setIsTabletOrMobile] = useState(window.innerWidth <= 768);
+  const [isTabletOrMobile, setIsTabletOrMobile] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
+    const updateIsTabletOrMobile = () => {
       setIsTabletOrMobile(window.innerWidth <= 768);
     };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    if (typeof window !== 'undefined') {
+      updateIsTabletOrMobile(); // Initial check
+      window.addEventListener('resize', updateIsTabletOrMobile);
+      return () => {
+        window.removeEventListener('resize', updateIsTabletOrMobile);
+      };
+    }
   }, []);
 
   return (
