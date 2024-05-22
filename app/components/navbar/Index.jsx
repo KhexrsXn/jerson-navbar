@@ -14,7 +14,9 @@ function Item({ name, onMouseEnter, onMouseLeave, onClick }) {
 
   useEffect(() => {
     const updateIsTabletOrMobile = () => {
-      setIsTabletOrMobile(window.innerWidth <= 768);
+      if (typeof window !== 'undefined') {
+        setIsTabletOrMobile(window.innerWidth <= 768);
+      }
     };
     if (typeof window !== 'undefined') {
       updateIsTabletOrMobile(); 
