@@ -17,7 +17,7 @@ function Item({ name, onMouseEnter, onMouseLeave, onClick }) {
       setIsTabletOrMobile(window.innerWidth <= 768);
     };
     if (typeof window !== 'undefined') {
-      updateIsTabletOrMobile(); // Initial check
+      updateIsTabletOrMobile(); 
       window.addEventListener('resize', updateIsTabletOrMobile);
       return () => {
         window.removeEventListener('resize', updateIsTabletOrMobile);
