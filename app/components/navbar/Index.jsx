@@ -18,14 +18,15 @@ function Item({ name, onMouseEnter, onMouseLeave, onClick }) {
         setIsTabletOrMobile(window.innerWidth <= 768);
       }
     };
+    updateIsTabletOrMobile(); 
     if (typeof window !== 'undefined') {
-      updateIsTabletOrMobile(); 
       window.addEventListener('resize', updateIsTabletOrMobile);
       return () => {
         window.removeEventListener('resize', updateIsTabletOrMobile);
       };
     }
   }, []);
+  
 
   return (
     <div
